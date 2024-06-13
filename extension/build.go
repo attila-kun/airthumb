@@ -4,27 +4,63 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	ctx := log.Logger.WithContext(context.Background())
+	logger := getLog()
+	ctx := logger.WithContext(context.Background())
 	var rootCmd = &cobra.Command{Use: "app"}
 
 	options := api.BuildOptions{
-		EntryPoints: []string{"./src/background.js", "./src/content.js"},
-		Outdir:      "dist",
-		Bundle:      true,
-		Sourcemap:   api.SourceMapNone,
-		Format:      api.FormatESModule,
-		Target:      api.ES2017,
-		Write:       true,
-		LogLevel:    api.LogLevelDebug,
+		EntryPoints: []string{
+			"./src/manifest.json",
+			"./src/background.js",
+			"./src/content.js",
+		},
+		Outdir:    "dist",
+		Bundle:    true,
+		Sourcemap: api.SourceMapNone,
+		Format:    api.FormatESModule,
+		Target:    api.ES2017,
+		Write:     true,
+		LogLevel:  api.LogLevelDebug,
+		Plugins: []api.Plugin{{
+			Name: "json-plugin",
+			Setup: func(build api.PluginBuild) {
+				build.OnLoad(api.OnLoadOptions{Filter: `.*.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
+					filename := filepath.Base(args.Path)
+
+					// Read the file content
+					contentBytes, err := os.ReadFile(args.Path)
+					if err != nil {
+						logger.Fatal().Str("path", args.Path).Msg("failed to read file")
+						return api.OnLoadResult{}, err
+					}
+					contents := string(contentBytes)
+
+					if filename == "manifest.json" {
+						return api.OnLoadResult{
+							Contents: &contents,
+							Loader:   api.LoaderCopy,
+						}, nil
+					}
+
+					// Default handler for other .json files
+					return api.OnLoadResult{
+						Contents: &contents,
+						Loader:   api.LoaderJSON,
+					}, nil
+				})
+			},
+		}},
 	}
 
 	var buildCmd = &cobra.Command{
@@ -45,6 +81,21 @@ func main() {
 
 	rootCmd.AddCommand(buildCmd, watchCmd)
 	rootCmd.Execute()
+}
+
+func getLog() zerolog.Logger {
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	logger := zerolog.New(
+		zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339Nano,
+			NoColor:    os.Getenv("LOG_NO_COLOR") == "true",
+		},
+	).With().Timestamp().Caller().Stack().Logger()
+
+	return logger
 }
 
 func build(ctx context.Context, options api.BuildOptions) {
