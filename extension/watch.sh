@@ -1,0 +1,1 @@
+rm -rf dist/ && go run build.go watch
