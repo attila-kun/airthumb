@@ -1,0 +1,1 @@
+// The custom esbuild plugin will override this with the environment specific JSON file.
