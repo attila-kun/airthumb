@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -34,6 +35,7 @@ func main() {
 		Write:     true,
 		LogLevel:  api.LogLevelDebug,
 		Plugins: []api.Plugin{
+			environmentPlugin(ctx, "prod"),
 			jsonPlugin(ctx),
 			timestampPlugin(),
 		},
@@ -74,14 +76,45 @@ func getLog() zerolog.Logger {
 	return logger
 }
 
+func environmentPlugin(
+	ctx context.Context,
+	env string,
+) api.Plugin {
+	logger := zerolog.Ctx(ctx)
+	return api.Plugin{
+		Name: "environment-plugin",
+		Setup: func(build api.PluginBuild) {
+			build.OnLoad(api.OnLoadOptions{Filter: `environment.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
+
+				// logger.Fatal().Msg("hello")
+
+				// Modify the file path to include the environment name
+				envFilename := strings.Replace(args.Path, "environment.json", "environment_"+env+".json", 1)
+
+				// Read the environment-specific JSON file
+				contentBytes, err := os.ReadFile(filepath.Clean(envFilename))
+				if err != nil {
+					logger.Error().Str("path", envFilename).Msg("failed to read environment file")
+					return api.OnLoadResult{}, err
+				}
+				contents := string(contentBytes)
+
+				// Return the contents to be used by the build
+				return api.OnLoadResult{
+					Contents: &contents,
+					Loader:   api.LoaderJSON,
+				}, nil
+			})
+		},
+	}
+}
+
 func jsonPlugin(ctx context.Context) api.Plugin {
 	logger := zerolog.Ctx(ctx)
 	return api.Plugin{
 		Name: "json-plugin",
 		Setup: func(build api.PluginBuild) {
-			build.OnLoad(api.OnLoadOptions{Filter: `.*.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
-				filename := filepath.Base(args.Path)
-
+			build.OnLoad(api.OnLoadOptions{Filter: `manifest.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
 				// Read the file content
 				contentBytes, err := os.ReadFile(args.Path)
 				if err != nil {
@@ -89,18 +122,9 @@ func jsonPlugin(ctx context.Context) api.Plugin {
 					return api.OnLoadResult{}, err
 				}
 				contents := string(contentBytes)
-
-				if filename == "manifest.json" {
-					return api.OnLoadResult{
-						Contents: &contents,
-						Loader:   api.LoaderCopy,
-					}, nil
-				}
-
-				// Default handler for other .json files
 				return api.OnLoadResult{
 					Contents: &contents,
-					Loader:   api.LoaderJSON,
+					Loader:   api.LoaderCopy,
 				}, nil
 			})
 		},

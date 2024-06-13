@@ -1,8 +1,10 @@
+import environment from "./environment.json";
+
 const startMonitoringChange = () => {
 
-    // if (process.env.NODE_ENV !== 'development') {
-    //   return;
-    // }
+    if (environment.env !== 'dev') {
+      return;
+    }
 
     let oldTimestamp = null;
 
