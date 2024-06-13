@@ -30,5 +30,4 @@ const startMonitoringChange = () => {
 };
 
 startMonitoringChange();
-
 console.log('Background script loaded');

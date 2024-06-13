@@ -67,8 +67,9 @@ func getOptions(
 	return api.BuildOptions{
 		EntryPoints: []string{
 			"./src/manifest.json",
-			"./src/background.js",
-			"./src/content.js",
+			"./src/background.ts",
+			"./src/content.ts",
+			"./src/content.css",
 		},
 		Outdir:    "dist",
 		Bundle:    true,
