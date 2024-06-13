@@ -21,31 +21,15 @@ func main() {
 	ctx := logger.WithContext(context.Background())
 	var rootCmd = &cobra.Command{Use: "app"}
 
-	options := api.BuildOptions{
-		EntryPoints: []string{
-			"./src/manifest.json",
-			"./src/background.js",
-			"./src/content.js",
-		},
-		Outdir:    "dist",
-		Bundle:    true,
-		Sourcemap: api.SourceMapNone,
-		Format:    api.FormatESModule,
-		Target:    api.ES2017,
-		Write:     true,
-		LogLevel:  api.LogLevelDebug,
-		Plugins: []api.Plugin{
-			environmentPlugin(ctx, "prod"),
-			jsonPlugin(ctx),
-			timestampPlugin(),
-		},
-	}
+	// Define a string flag for environment
+	var env string
+	rootCmd.PersistentFlags().StringVarP(&env, "env", "e", "dev", "Set the environment")
 
 	var buildCmd = &cobra.Command{
 		Use:   "build",
 		Short: "Build the project",
 		Run: func(cmd *cobra.Command, args []string) {
-			build(ctx, options)
+			build(ctx, getOptions(ctx, env))
 		},
 	}
 
@@ -53,7 +37,7 @@ func main() {
 		Use:   "watch",
 		Short: "Watch the project files",
 		Run: func(cmd *cobra.Command, args []string) {
-			watch(ctx, options)
+			watch(ctx, getOptions(ctx, env))
 		},
 	}
 
@@ -74,6 +58,31 @@ func getLog() zerolog.Logger {
 	).With().Timestamp().Caller().Stack().Logger()
 
 	return logger
+}
+
+func getOptions(
+	ctx context.Context,
+	env string,
+) api.BuildOptions {
+	return api.BuildOptions{
+		EntryPoints: []string{
+			"./src/manifest.json",
+			"./src/background.js",
+			"./src/content.js",
+		},
+		Outdir:    "dist",
+		Bundle:    true,
+		Sourcemap: api.SourceMapNone,
+		Format:    api.FormatESModule,
+		Target:    api.ES2017,
+		Write:     true,
+		LogLevel:  api.LogLevelDebug,
+		Plugins: []api.Plugin{
+			environmentPlugin(ctx, env),
+			jsonPlugin(ctx),
+			timestampPlugin(),
+		},
+	}
 }
 
 func environmentPlugin(
