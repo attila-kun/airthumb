@@ -17,13 +17,14 @@ func main() {
 	var rootCmd = &cobra.Command{Use: "app"}
 
 	options := api.BuildOptions{
-		EntryPoints: []string{"src/background.js", "src/content.js"},
+		EntryPoints: []string{"./src/background.js", "./src/content.js"},
 		Outdir:      "dist",
 		Bundle:      true,
 		Sourcemap:   api.SourceMapNone,
 		Format:      api.FormatESModule,
 		Target:      api.ES2017,
 		Write:       true,
+		LogLevel:    api.LogLevelDebug,
 	}
 
 	var buildCmd = &cobra.Command{
