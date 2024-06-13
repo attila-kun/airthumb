@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -32,35 +33,10 @@ func main() {
 		Target:    api.ES2017,
 		Write:     true,
 		LogLevel:  api.LogLevelDebug,
-		Plugins: []api.Plugin{{
-			Name: "json-plugin",
-			Setup: func(build api.PluginBuild) {
-				build.OnLoad(api.OnLoadOptions{Filter: `.*.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
-					filename := filepath.Base(args.Path)
-
-					// Read the file content
-					contentBytes, err := os.ReadFile(args.Path)
-					if err != nil {
-						logger.Fatal().Str("path", args.Path).Msg("failed to read file")
-						return api.OnLoadResult{}, err
-					}
-					contents := string(contentBytes)
-
-					if filename == "manifest.json" {
-						return api.OnLoadResult{
-							Contents: &contents,
-							Loader:   api.LoaderCopy,
-						}, nil
-					}
-
-					// Default handler for other .json files
-					return api.OnLoadResult{
-						Contents: &contents,
-						Loader:   api.LoaderJSON,
-					}, nil
-				})
-			},
-		}},
+		Plugins: []api.Plugin{
+			jsonPlugin(ctx),
+			timestampPlugin(),
+		},
 	}
 
 	var buildCmd = &cobra.Command{
@@ -96,6 +72,66 @@ func getLog() zerolog.Logger {
 	).With().Timestamp().Caller().Stack().Logger()
 
 	return logger
+}
+
+func jsonPlugin(ctx context.Context) api.Plugin {
+	logger := zerolog.Ctx(ctx)
+	return api.Plugin{
+		Name: "json-plugin",
+		Setup: func(build api.PluginBuild) {
+			build.OnLoad(api.OnLoadOptions{Filter: `.*.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
+				filename := filepath.Base(args.Path)
+
+				// Read the file content
+				contentBytes, err := os.ReadFile(args.Path)
+				if err != nil {
+					logger.Fatal().Str("path", args.Path).Msg("failed to read file")
+					return api.OnLoadResult{}, err
+				}
+				contents := string(contentBytes)
+
+				if filename == "manifest.json" {
+					return api.OnLoadResult{
+						Contents: &contents,
+						Loader:   api.LoaderCopy,
+					}, nil
+				}
+
+				// Default handler for other .json files
+				return api.OnLoadResult{
+					Contents: &contents,
+					Loader:   api.LoaderJSON,
+				}, nil
+			})
+		},
+	}
+}
+
+func timestampPlugin() api.Plugin {
+	return api.Plugin{
+		Name: "timestamp-plugin",
+		Setup: func(build api.PluginBuild) {
+			build.OnEnd(func(result *api.BuildResult) (api.OnEndResult, error) {
+				if len(result.Errors) == 0 {
+					timestamp := map[string]int64{
+						"timestamp": time.Now().UnixMilli(),
+					}
+					data, err := json.Marshal(timestamp)
+					if err != nil {
+						return api.OnEndResult{}, err
+					}
+					filePath := filepath.Join("dist", "timestamp.json")
+					if err := os.WriteFile(filePath, data, 0644); err != nil {
+						return api.OnEndResult{}, err
+					}
+					if err != nil {
+						return api.OnEndResult{}, err
+					}
+				}
+				return api.OnEndResult{}, nil
+			})
+		},
+	}
 }
 
 func build(ctx context.Context, options api.BuildOptions) {
