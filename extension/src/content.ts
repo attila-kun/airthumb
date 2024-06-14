@@ -3,6 +3,10 @@ startObserving(
     {
       selector: '[data-section-id="OVERVIEW_DEFAULT_V2"] section',
       insertCallback(node: HTMLElement, tick: HTMLElement) {
+        
+        const listingId = getListingId();
+        console.log('listingId', listingId);
+
         const thumbs = document.createElement('div');
         thumbs.classList.add('thumbs');
 
@@ -48,6 +52,20 @@ startObserving(
     }
   ]
 )
+
+function getListingId() {
+  const regex = /airbnb\.\w+(?:\.\w+)?\/rooms\/(\d+)/;
+  const matches = window.location.href.match(regex);
+  if (!matches || matches?.length < 1) {
+    return null;
+  }
+  const result = parseInt(matches[1], 10);
+  if (isNaN(result)) {
+    return null;
+  }
+
+  return result;
+}
 
 interface SelectorAndHandler {
   selector: String | (() => HTMLElement[])
