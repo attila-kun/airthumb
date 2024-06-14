@@ -37,7 +37,7 @@ startObserving(
         inputForm.append(input);
 
         const saveButton = document.createElement('button');
-        saveButton.textContent = "Save"
+        saveButton.textContent = "Add note"
         inputForm.append(saveButton);
 
         tick.append(inputForm);
