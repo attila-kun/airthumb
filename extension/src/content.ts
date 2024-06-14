@@ -4,6 +4,11 @@ startObserving(
       selector: '[data-section-id="OVERVIEW_DEFAULT_V2"] section',
       insertCallback(node: HTMLElement, tick: HTMLElement) {
 
+        const { listContainer, addNote } = createListControl();
+  
+        // Example: appending the list container to a specific part of the node
+        tick.appendChild(listContainer); // Append the list container wherever you want in the DOM      
+
         const thumbsUpHandler = () => {
           console.log('thumbs up');
         };
@@ -12,8 +17,8 @@ startObserving(
           console.log('thumbs down');
         };
 
-        const addNoteHandler = () => {
-          console.log('add note');
+        const addNoteHandler = (note) => {
+          addNote(note)
         };
         
         const thumbs = document.createElement('div');
@@ -23,16 +28,40 @@ startObserving(
 
         thumbs.appendChild(thumbsUp);
         thumbs.appendChild(thumbsDown);
-        tick.appendChild(thumbs);
+
+        const coreControls = document.createElement('div');
+        coreControls.classList.add('core-controls');
+
+        coreControls.appendChild(thumbs);
 
         const inputForm = createInputForm(addNoteHandler);
-        tick.appendChild(inputForm);
+        coreControls.appendChild(inputForm);
+
+        tick.append(coreControls);
 
         node.appendChild(tick);
       },
     }
   ]
 )
+
+function createListControl(): { listContainer: HTMLElement, addNote: (note: string) => void } {
+  const listContainer = document.createElement('div');
+  listContainer.classList.add('note-list');
+
+  // Method to add a note to the list
+  function addNote(note: string) {
+    const noteItem = document.createElement('div');
+    noteItem.classList.add('note-item');
+    noteItem.textContent = note;
+    listContainer.appendChild(noteItem);
+  }
+
+  return {
+    listContainer,
+    addNote
+  };
+}
 
 function getListingId() {
   const regex = /airbnb\.\w+(?:\.\w+)?\/rooms\/(\d+)/;
@@ -87,7 +116,7 @@ interface SelectorAndHandler {
 
 async function startObserving(selectorAndHandlerList: SelectorAndHandler[]) {
 
-    const AIRTHUMB_SELECTION_TICK_CLASS_NAME = 'airthumb-icons';
+    const AIRTHUMB_SELECTION_TICK_CLASS_NAME = 'airthumb-controls';
   
     function initializeSelectors(
       node,
