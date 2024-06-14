@@ -3,6 +3,9 @@ startObserving(
     {
       selector: '[data-section-id="OVERVIEW_DEFAULT_V2"] section',
       insertCallback(node: HTMLElement, tick: HTMLElement) {
+        const thumbs = document.createElement('div');
+        thumbs.classList.add('thumbs');
+
         // Create thumbs up element
         const thumbsUp = document.createElement('div');
         thumbsUp.classList.add('thumb');
@@ -22,8 +25,10 @@ startObserving(
         });
 
         // Append thumbs up and thumbs down to tick
-        tick.appendChild(thumbsUp);
-        tick.appendChild(thumbsDown);
+        thumbs.appendChild(thumbsUp);
+        thumbs.appendChild(thumbsDown);
+
+        tick.append(thumbs);
 
         // Append tick to the node
         node.appendChild(tick);
