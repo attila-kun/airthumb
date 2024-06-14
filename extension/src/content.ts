@@ -5,16 +5,20 @@ startObserving(
       insertCallback(node: HTMLElement, tick: HTMLElement) {
         // Create thumbs up element
         const thumbsUp = document.createElement('div');
+        thumbsUp.classList.add('thumb');
         thumbsUp.classList.add('thumbs-up');
         thumbsUp.addEventListener('click', function(ev: MouseEvent) {
-          console.log('tumbs up');
+          this.classList.toggle('thumb');
+          this.classList.toggle('thumb-filled');
         });
 
         // Create thumbs down element
         const thumbsDown = document.createElement('div');
+        thumbsDown.classList.add('thumb');
         thumbsDown.classList.add('thumbs-down');
         thumbsDown.addEventListener('click', function(ev: MouseEvent) {
-          console.log('tumbs down');
+          this.classList.toggle('thumb');
+          this.classList.toggle('thumb-filled');
         });
 
         // Append thumbs up and thumbs down to tick
