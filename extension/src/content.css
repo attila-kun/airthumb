@@ -1,3 +1,9 @@
+.airthumb-icons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
 .airthumb-icons .thumbs > div {
     width: 33px;   /* Adjust the size as needed */
     height: 33px;  /* Adjust the size as needed */
@@ -24,4 +30,13 @@
     margin-top: 10px;
     transform: rotate(180deg);
     cursor: pointer;
+}
+
+.airthumb-icons .input-form {
+    display: flex;
+    gap: 5px;
+}
+
+.airthumb-icons input {
+    width: 300px;
 }

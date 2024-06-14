@@ -30,6 +30,18 @@ startObserving(
 
         tick.append(thumbs);
 
+        const inputForm = document.createElement('div');
+        inputForm.classList.add('input-form');
+
+        const input = document.createElement('input');
+        inputForm.append(input);
+
+        const saveButton = document.createElement('button');
+        saveButton.textContent = "Save"
+        inputForm.append(saveButton);
+
+        tick.append(inputForm);
+
         // Append tick to the node
         node.appendChild(tick);
       },
