@@ -3,50 +3,31 @@ startObserving(
     {
       selector: '[data-section-id="OVERVIEW_DEFAULT_V2"] section',
       insertCallback(node: HTMLElement, tick: HTMLElement) {
-        
-        const listingId = getListingId();
-        console.log('listingId', listingId);
 
+        const thumbsUpHandler = () => {
+          console.log('thumbs up');
+        };
+
+        const thumbsDownHandler = () => {
+          console.log('thumbs down');
+        };
+
+        const addNoteHandler = () => {
+          console.log('add note');
+        };
+        
         const thumbs = document.createElement('div');
         thumbs.classList.add('thumbs');
+        const thumbsUp = createThumbElement('up', thumbsUpHandler);
+        const thumbsDown = createThumbElement('down', thumbsDownHandler);
 
-        // Create thumbs up element
-        const thumbsUp = document.createElement('div');
-        thumbsUp.classList.add('thumb');
-        thumbsUp.classList.add('thumbs-up');
-        thumbsUp.addEventListener('click', function(ev: MouseEvent) {
-          this.classList.toggle('thumb');
-          this.classList.toggle('thumb-filled');
-        });
-
-        // Create thumbs down element
-        const thumbsDown = document.createElement('div');
-        thumbsDown.classList.add('thumb');
-        thumbsDown.classList.add('thumbs-down');
-        thumbsDown.addEventListener('click', function(ev: MouseEvent) {
-          this.classList.toggle('thumb');
-          this.classList.toggle('thumb-filled');
-        });
-
-        // Append thumbs up and thumbs down to tick
         thumbs.appendChild(thumbsUp);
         thumbs.appendChild(thumbsDown);
+        tick.appendChild(thumbs);
 
-        tick.append(thumbs);
+        const inputForm = createInputForm(addNoteHandler);
+        tick.appendChild(inputForm);
 
-        const inputForm = document.createElement('div');
-        inputForm.classList.add('input-form');
-
-        const input = document.createElement('input');
-        inputForm.append(input);
-
-        const saveButton = document.createElement('button');
-        saveButton.textContent = "Add note"
-        inputForm.append(saveButton);
-
-        tick.append(inputForm);
-
-        // Append tick to the node
         node.appendChild(tick);
       },
     }
@@ -65,6 +46,38 @@ function getListingId() {
   }
 
   return result;
+}
+
+function createThumbElement(type: 'up' | 'down', callback: (ev: MouseEvent) => void): HTMLElement {
+  const thumb = document.createElement('div');
+  thumb.classList.add('thumb', `thumbs-${type}`);
+  thumb.addEventListener('click', callback);
+  return thumb;
+}
+
+function createInputForm(enterCallback: (value: string) => void): HTMLElement {
+  const inputForm = document.createElement('div');
+  inputForm.classList.add('input-form');
+
+  const input = document.createElement('input');
+  inputForm.append(input);
+
+  const saveButton = document.createElement('button');
+  saveButton.textContent = "Add note";
+  saveButton.addEventListener('click', () => {
+    enterCallback(input.value);
+    input.value = ''; // clear input after saving
+  });
+
+  // Handle enter key in the input to trigger save button click
+  input.addEventListener('keydown', function(ev: KeyboardEvent) {
+    if (ev.key === 'Enter') {
+      saveButton.click();
+    }
+  });
+
+  inputForm.append(saveButton);
+  return inputForm;
 }
 
 interface SelectorAndHandler {
