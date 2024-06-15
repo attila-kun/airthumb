@@ -4,17 +4,20 @@ startObserving(
       selector: '[data-section-id="OVERVIEW_DEFAULT_V2"] section',
       insertCallback(node: HTMLElement, tick: HTMLElement) {
 
-        const { listContainer, setNotes } = createListControl();
-
         let model: {
           thumbsState: 'up' | 'down' | null,
           notes: string[]
         } = {
-          thumbsState: null,
-          notes: []
+          thumbsState: 'down',
+          notes: ['hello', 'bar']
         };
 
         let render;
+
+        const { listContainer, setNotes } = createListControl((noteIndex) => {
+          model.notes.splice(noteIndex, 1);
+          render();
+        });
 
         const thumbsUpHandler = () => {
           model.thumbsState = model.thumbsState === 'up' ? null : 'up';
@@ -72,12 +75,14 @@ startObserving(
 
           setNotes(model.notes);
         };
+
+        render();
       },
     }
   ]
 )
 
-function createListControl(): {
+function createListControl(onNoteRemove: (noteIndex: number) => void): {
   listContainer: HTMLElement,
   setNotes: (notes: string[]) => void
 } {
@@ -85,19 +90,24 @@ function createListControl(): {
   listContainer.classList.add('note-list');
 
   // Method to add a note to the list
-  function addNote(note: string) {
+  function addNote(note: string, index: number) {
     const noteItem = document.createElement('div');
+    const removeIcon = document.createElement('span');
+    
     noteItem.classList.add('note-item');
-    noteItem.textContent = note;
+    removeIcon.classList.add('remove-note');
+    removeIcon.textContent = '❌';
+    removeIcon.onclick = () => onNoteRemove(index);
+
+    noteItem.appendChild(removeIcon);
+    noteItem.appendChild(document.createTextNode(note));
     listContainer.appendChild(noteItem);
   }
 
   return {
     listContainer,
     setNotes(notes) {
-      // Clear the existing notes
       listContainer.innerHTML = '';
-      // Add new notes to the list
       notes.forEach(addNote);
     },
   };
