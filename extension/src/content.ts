@@ -9,16 +9,29 @@ startObserving(
         // Example: appending the list container to a specific part of the node
         tick.appendChild(listContainer); // Append the list container wherever you want in the DOM      
 
+        let model: {
+          thumbsState: 'up' | 'down' | null,
+          notes: string[]
+        } = {
+          thumbsState: null,
+          notes: []
+        };
+
+        let render;
+
         const thumbsUpHandler = () => {
-          console.log('thumbs up');
+          model.thumbsState = model.thumbsState === 'up' ? null : 'up';
+          render();
         };
 
         const thumbsDownHandler = () => {
-          console.log('thumbs down');
+          model.thumbsState = model.thumbsState === 'down' ? null : 'down';
+          render();
         };
 
         const addNoteHandler = (note) => {
-          addNote(note)
+          model.notes.push(note);
+          render();
         };
         
         const thumbs = document.createElement('div');
@@ -26,8 +39,8 @@ startObserving(
         const thumbsUp = createThumbElement('up', thumbsUpHandler);
         const thumbsDown = createThumbElement('down', thumbsDownHandler);
 
-        thumbs.appendChild(thumbsUp);
-        thumbs.appendChild(thumbsDown);
+        thumbs.appendChild(thumbsUp.node);
+        thumbs.appendChild(thumbsDown.node);
 
         const coreControls = document.createElement('div');
         coreControls.classList.add('core-controls');
@@ -40,6 +53,25 @@ startObserving(
         tick.append(coreControls);
 
         node.appendChild(tick);
+
+        render = () => {
+          switch (model.thumbsState) {
+            case 'up':
+              thumbsUp.setSelected(true);
+              thumbsDown.setSelected(false);
+              break;
+
+            case 'down':
+              thumbsUp.setSelected(false);
+              thumbsDown.setSelected(true);
+              break;
+
+            default:
+              thumbsUp.setSelected(false);
+              thumbsDown.setSelected(false);
+              break;
+          }
+        };
       },
     }
   ]
@@ -77,11 +109,25 @@ function getListingId() {
   return result;
 }
 
-function createThumbElement(type: 'up' | 'down', callback: (ev: MouseEvent) => void): HTMLElement {
+function createThumbElement(type: 'up' | 'down', callback: (ev: MouseEvent) => void): {
+  node: HTMLElement,
+  setSelected: (isSelected: Boolean) => void
+} {
   const thumb = document.createElement('div');
   thumb.classList.add('thumb', `thumbs-${type}`);
   thumb.addEventListener('click', callback);
-  return thumb;
+  return {
+    node: thumb,
+    setSelected: (isSelected) => {
+      if (isSelected) {
+        thumb.classList.remove('thumb');
+        thumb.classList.add('thumb-filled');
+      } else {
+        thumb.classList.remove('thumb-filled');
+        thumb.classList.add('thumb');
+      }
+    }
+  };
 }
 
 function createInputForm(enterCallback: (value: string) => void): HTMLElement {
