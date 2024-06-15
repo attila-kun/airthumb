@@ -38,7 +38,7 @@ func main() {
 		Use:   "watch",
 		Short: "Watch the project files",
 		Run: func(cmd *cobra.Command, args []string) {
-			watch(ctx, getOptions(ctx, env))
+			watch(ctx)
 		},
 	}
 
@@ -72,27 +72,45 @@ func getLog() zerolog.Logger {
 func getOptions(
 	ctx context.Context,
 	env string,
-) api.BuildOptions {
-	return api.BuildOptions{
-		EntryPoints: []string{
-			"./src/manifest.json",
-			"./src/background.ts",
-			"./src/content.ts",
-			"./src/content.css",
-			"./src/web_accessible_resources/images/logo.png",
+) []api.BuildOptions {
+	return []api.BuildOptions{
+		{
+			EntryPoints: []string{
+				"./src/content.ts",
+			},
+			Outdir:    "dist",
+			Bundle:    true,
+			Sourcemap: api.SourceMapNone,
+			Format:    api.Format(api.PlatformBrowser),
+			Target:    api.ES2017,
+			Write:     true,
+			LogLevel:  api.LogLevelInfo,
+			Plugins: []api.Plugin{
+				stubPlugin(ctx, "mixpanel-browser"),
+				environmentPlugin(ctx, env),
+				timestampPlugin(),
+			},
 		},
-		Outdir:    "dist",
-		Bundle:    true,
-		Sourcemap: api.SourceMapNone,
-		Format:    api.FormatESModule,
-		Target:    api.ES2017,
-		Write:     true,
-		LogLevel:  api.LogLevelInfo,
-		Plugins: []api.Plugin{
-			environmentPlugin(ctx, env),
-			copyPlugin(ctx, `manifest.json$`),
-			copyPlugin(ctx, `logo.png$`),
-			timestampPlugin(),
+		{
+			EntryPoints: []string{
+				"./src/manifest.json",
+				"./src/background.ts",
+				"./src/content.css",
+				"./src/web_accessible_resources/images/logo.png",
+			},
+			Outdir:    "dist",
+			Bundle:    true,
+			Sourcemap: api.SourceMapNone,
+			Format:    api.FormatESModule,
+			Target:    api.ES2017,
+			Write:     true,
+			LogLevel:  api.LogLevelInfo,
+			Plugins: []api.Plugin{
+				environmentPlugin(ctx, env),
+				copyPlugin(ctx, `manifest.json$`),
+				copyPlugin(ctx, `logo.png$`),
+				timestampPlugin(),
+			},
 		},
 	}
 }
@@ -124,6 +142,26 @@ func environmentPlugin(
 				return api.OnLoadResult{
 					Contents: &contents,
 					Loader:   api.LoaderJSON,
+				}, nil
+			})
+		},
+	}
+}
+
+func stubPlugin(
+	ctx context.Context,
+	filter string,
+) api.Plugin {
+	logger := zerolog.Ctx(ctx)
+	return api.Plugin{
+		Name: "stub-plugin",
+		Setup: func(build api.PluginBuild) {
+			build.OnLoad(api.OnLoadOptions{Filter: filter}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
+				logger.Debug().Str("path", args.Path).Msg("subPlugin OnLoad")
+				contents := ""
+				return api.OnLoadResult{
+					Contents: &contents,
+					Loader:   api.LoaderJS,
 				}, nil
 			})
 		},
@@ -182,22 +220,20 @@ func timestampPlugin() api.Plugin {
 	}
 }
 
-func build(ctx context.Context, options api.BuildOptions) {
+func build(ctx context.Context, options []api.BuildOptions) {
 	logger := zerolog.Ctx(ctx)
-	result := api.Build(options)
-	if len(result.Errors) > 0 {
-		logger.Fatal().Interface("errors", result.Errors).Msg("Errors in building files.")
-	} else {
-		logger.Info().Msg("Build succeeded.")
+	for _, opts := range options {
+		result := api.Build(opts)
+		if len(result.Errors) > 0 {
+			logger.Fatal().Interface("errors", result.Errors).Msg("Errors in building files.")
+		} else {
+			logger.Info().Msg("Build succeeded.")
+		}
 	}
 }
 
-func watch(ctx context.Context, options api.BuildOptions) {
+func watch(ctx context.Context) {
 	logger := zerolog.Ctx(ctx)
-	esbuildCtx, buildCtxErr := api.Context(options)
-	if buildCtxErr != nil {
-		logger.Fatal().Err(buildCtxErr).Msg("Could not create esbuild context.")
-	}
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -229,12 +265,7 @@ func watch(ctx context.Context, options api.BuildOptions) {
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					logger.Info().Msgf("Detected change in file: %s", event.Name)
-					result := esbuildCtx.Rebuild()
-					if len(result.Errors) > 0 {
-						logger.Error().Msgf("Build errors: %v", result.Errors)
-					} else {
-						logger.Info().Msg("Rebuilt.")
-					}
+					build(ctx, getOptions(ctx, "dev"))
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -247,9 +278,9 @@ func watch(ctx context.Context, options api.BuildOptions) {
 		}
 	}()
 
+	build(ctx, getOptions(ctx, "dev"))
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
 	sig := <-done
 	logger.Info().Msgf("Shutting down gracefully, received signal: %v", sig)
-	esbuildCtx.Dispose()
 }

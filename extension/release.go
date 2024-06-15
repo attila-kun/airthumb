@@ -37,10 +37,16 @@ func release(ctx context.Context, env string) error {
 	}
 
 	options := getOptions(ctx, env)
-	options.MinifyIdentifiers = true
-	options.MinifySyntax = true
-	options.Target = api.ES2015
-	build(ctx, options) // Assuming the build function setups the dist directory correctly
+	newOptions := []api.BuildOptions{}
+	for _, opts := range options {
+		opts.MinifyIdentifiers = true
+		opts.MinifySyntax = true
+		opts.Target = api.ES2015
+
+		newOptions = append(newOptions, opts)
+	}
+
+	build(ctx, newOptions) // Assuming the build function setups the dist directory correctly
 
 	packageDir := fmt.Sprintf("dist_package/airthumb-v%s.zip", manifest.Version)
 	if err := os.MkdirAll(filepath.Dir(packageDir), 0755); err != nil {
