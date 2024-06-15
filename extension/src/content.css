@@ -25,14 +25,16 @@
 .airthumb-controls .thumbs {
     display: flex;
     gap: 5px;
+    margin: 10px 0;
 }
 
 .airthumb-controls .thumbs > div {
-    margin: 10px 0;
-    background-position: center;
+    margin: 0;
+    padding: 0;
+    background-position: 0 0;
     background-repeat: no-repeat;
     width: 30px;
-    height: 30px;
+    height: 37px;
 }
 
 .airthumb-controls .thumb {
