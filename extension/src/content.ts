@@ -5,9 +5,6 @@ startObserving(
       insertCallback(node: HTMLElement, tick: HTMLElement) {
 
         const { listContainer, setNotes } = createListControl();
-  
-        // Example: appending the list container to a specific part of the node
-        tick.appendChild(listContainer); // Append the list container wherever you want in the DOM      
 
         let model: {
           thumbsState: 'up' | 'down' | null,
@@ -51,6 +48,7 @@ startObserving(
         coreControls.appendChild(inputForm);
 
         tick.append(coreControls);
+        tick.appendChild(listContainer); // Append the list container wherever you want in the DOM      
 
         node.appendChild(tick);
 
