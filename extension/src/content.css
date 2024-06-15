@@ -22,11 +22,17 @@
     align-items: center;
 }
 
+.airthumb-controls .thumbs {
+    display: flex;
+    gap: 5px;
+}
+
 .airthumb-controls .thumbs > div {
-    width: 33px;   /* Adjust the size as needed */
-    height: 33px;  /* Adjust the size as needed */
-    background-size: 28px 28px;
+    margin: 10px 0;
+    background-position: center;
     background-repeat: no-repeat;
+    width: 30px;
+    height: 30px;
 }
 
 .airthumb-controls .thumb {
@@ -38,14 +44,10 @@
 }
 
 .airthumb-controls .thumbs-up {
-    display: inline-block;
-    margin-top: 10px;
     cursor: pointer;
 }
 
 .airthumb-controls .thumbs-down {
-    display: inline-block;
-    margin-top: 10px;
     transform: rotate(180deg);
     cursor: pointer;
 }
