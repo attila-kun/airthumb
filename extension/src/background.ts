@@ -1,5 +1,10 @@
 import environment from "./environment.json";
-import { trackBackend } from "./track";
+import mixpanel from "mixpanel-browser"; // have to use a special fork: https://github.com/mixpanel/mixpanel-js/issues/304
+import { track } from "./track";
+
+globalThis.isBackgroundScript = true;
+mixpanel.init(environment.mixpanelToken);
+mixpanel.track('extensionLoaded');
 
 const startMonitoringChange = () => {
 
@@ -34,7 +39,7 @@ startMonitoringChange();
 
 chrome.runtime.onInstalled.addListener(function(details) {
     if (details.reason === 'install') {
-      trackBackend('extensionInstalled');
+      track('extensionInstalled');
     }
 });
   
@@ -44,7 +49,7 @@ chrome.runtime.onMessage.addListener(
   
     switch(request.command) {
         case 'trackEvent':
-          trackBackend(request.eventName, request.event);
+          track(request.eventName, request.event);
           break;
   
         default:

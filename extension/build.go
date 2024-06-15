@@ -86,7 +86,7 @@ func getOptions(
 		Format:    api.FormatESModule,
 		Target:    api.ES2017,
 		Write:     true,
-		LogLevel:  api.LogLevelDebug,
+		LogLevel:  api.LogLevelInfo,
 		Plugins: []api.Plugin{
 			environmentPlugin(ctx, env),
 			copyPlugin(ctx, `manifest.json$`),

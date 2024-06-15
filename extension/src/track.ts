@@ -1,14 +1,18 @@
-export async function trackBackend(eventName: string, props?) {  
-    console.log('track', eventName, props);
-}
+import mixpanel from "mixpanel-browser";
+import { isRunningAsBackgroundScript } from "./utils";
 
-export async function trackFrontend(eventName: string, props?) {  
-    chrome.runtime.sendMessage({
-      command: 'trackEvent',
-      eventName: eventName,
-      event: {
-        timestamp: new Date().valueOf(),
-        props: props,
-      }
-    });
+export async function track(eventName: string, props?) {
+  if (isRunningAsBackgroundScript()) {
+    mixpanel.track(eventName);
+    return;
+  }
+
+  chrome.runtime.sendMessage({
+    command: 'trackEvent',
+    eventName: eventName,
+    event: {
+      timestamp: new Date().valueOf(),
+      props: props,
+    }
+  });
 }

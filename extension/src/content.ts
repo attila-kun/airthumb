@@ -1,3 +1,5 @@
+import { track } from "./track";
+
 startObserving(
   [
     {
@@ -51,16 +53,19 @@ startObserving(
         const thumbsUpHandler = () => {
           model.thumbsState = model.thumbsState === 'up' ? null : 'up';
           render();
+          track("thumbsUp");
         };
 
         const thumbsDownHandler = () => {
           model.thumbsState = model.thumbsState === 'down' ? null : 'down';
           render();
+          track("thumbsDown");
         };
 
         const addNoteHandler = (note) => {
           model.notes.push(note);
           render();
+          track("addNote", { note });
         };
         
         const thumbs = document.createElement('div');
