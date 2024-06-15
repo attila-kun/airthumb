@@ -158,6 +158,9 @@ function createInputForm(enterCallback: (value: string) => void): HTMLElement {
   const saveButton = document.createElement('button');
   saveButton.textContent = "Add note";
   saveButton.addEventListener('click', () => {
+    if (input.value === '') {
+      return;
+    }
     enterCallback(input.value);
     input.value = ''; // clear input after saving
   });
@@ -165,6 +168,9 @@ function createInputForm(enterCallback: (value: string) => void): HTMLElement {
   // Handle enter key in the input to trigger save button click
   input.addEventListener('keydown', function(ev: KeyboardEvent) {
     if (ev.key === 'Enter') {
+      if (input.value === '') {
+        return;
+      }
       saveButton.click();
     }
   });
