@@ -41,7 +41,15 @@ func main() {
 		},
 	}
 
-	rootCmd.AddCommand(buildCmd, watchCmd)
+	var releaseCmd = &cobra.Command{
+		Use:   "release",
+		Short: "Package the extension into a zip file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return release(ctx, env)
+		},
+	}
+
+	rootCmd.AddCommand(buildCmd, watchCmd, releaseCmd)
 	rootCmd.Execute()
 }
 
