@@ -8,8 +8,25 @@ startObserving(
           thumbsState: 'up' | 'down' | null,
           notes: string[]
         } = {
-          thumbsState: 'down',
-          notes: ['hello', 'bar']
+          thumbsState: null,
+          notes: []
+        };
+
+        const listingId = String(getListingId());
+
+        const saveModel = () => {
+          chrome.storage.sync.set({ [listingId]: model }, () => {
+            console.log('Model saved', model);
+          });
+        };
+  
+        const readModel = () => {
+          chrome.storage.sync.get(listingId, (data) => {
+            if (data[listingId]) {
+              model = data[listingId];
+              render();
+            }
+          });
         };
 
         let render;
@@ -74,13 +91,15 @@ startObserving(
           }
 
           setNotes(model.notes);
+          saveModel();
         };
 
+        readModel();
         render();
       },
     }
   ]
-)
+);
 
 function createListControl(onNoteRemove: (noteIndex: number) => void): {
   listContainer: HTMLElement,

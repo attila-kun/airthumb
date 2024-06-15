@@ -1,3 +1,8 @@
+.airthumb-controls .note-list .note-item {
+    display: flex;
+    gap: 5px;
+}
+
 .airthumb-controls .note-list .remove-note {
     cursor: pointer;
 }
