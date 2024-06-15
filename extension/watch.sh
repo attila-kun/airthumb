@@ -1,1 +1,1 @@
-rm -rf dist/ && go run build.go watch
+rm -rf dist/ && go run . watch

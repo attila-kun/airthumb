@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/evanw/esbuild/pkg/api"
 	"github.com/rs/zerolog"
 )
 
@@ -35,7 +36,11 @@ func release(ctx context.Context, env string) error {
 		return err
 	}
 
-	build(ctx, getOptions(ctx, env)) // Assuming the build function setups the dist directory correctly
+	options := getOptions(ctx, env)
+	options.MinifyIdentifiers = true
+	options.MinifySyntax = true
+	options.Target = api.ES2015
+	build(ctx, options) // Assuming the build function setups the dist directory correctly
 
 	packageDir := fmt.Sprintf("dist_package/airthumb-v%s.zip", manifest.Version)
 	if err := os.MkdirAll(filepath.Dir(packageDir), 0755); err != nil {

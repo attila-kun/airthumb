@@ -1,1 +1,1 @@
-rm -rf dist/ && go run build.go build --env prod
+rm -rf dist/ && go run . build --env prod

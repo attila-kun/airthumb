@@ -185,7 +185,7 @@ func build(ctx context.Context, options api.BuildOptions) {
 	logger := zerolog.Ctx(ctx)
 	result := api.Build(options)
 	if len(result.Errors) > 0 {
-		logger.Error().Interface("errors", result.Errors).Msg("Errors in building files.")
+		logger.Fatal().Interface("errors", result.Errors).Msg("Errors in building files.")
 	} else {
 		logger.Info().Msg("Build succeeded.")
 	}
