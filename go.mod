@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/evanw/esbuild v0.21.5
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.0
 )

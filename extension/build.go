@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/evanw/esbuild/pkg/api"
+	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cobra"
@@ -193,15 +194,58 @@ func build(ctx context.Context, options api.BuildOptions) {
 
 func watch(ctx context.Context, options api.BuildOptions) {
 	logger := zerolog.Ctx(ctx)
-	esbuildCtx, esbuildCtxErr := api.Context(options)
-	if esbuildCtxErr != nil {
-		logger.Fatal().Err(esbuildCtxErr).Msg("Could not create esbuild context.")
+	esbuildCtx, buildCtxErr := api.Context(options)
+	if buildCtxErr != nil {
+		logger.Fatal().Err(buildCtxErr).Msg("Could not create esbuild context.")
 	}
 
-	err := esbuildCtx.Watch(api.WatchOptions{})
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Could not watch")
+		logger.Fatal().Err(err).Msg("Failed to create file watcher.")
 	}
+	defer watcher.Close()
+
+	// Add src directory to the watcher
+	srcDir := "src" // Adjust the path to your source directory as needed
+	err = filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return watcher.Add(path)
+		}
+		return nil
+	})
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to add src directory to watcher.")
+	}
+
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					logger.Info().Msgf("Detected change in file: %s", event.Name)
+					result := esbuildCtx.Rebuild()
+					if len(result.Errors) > 0 {
+						logger.Error().Msgf("Build errors: %v", result.Errors)
+					} else {
+						logger.Info().Msg("Rebuilt.")
+					}
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error().Err(err).Msg("Watcher error")
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
