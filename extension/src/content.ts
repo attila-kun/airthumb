@@ -4,7 +4,7 @@ startObserving(
       selector: '[data-section-id="OVERVIEW_DEFAULT_V2"] section',
       insertCallback(node: HTMLElement, tick: HTMLElement) {
 
-        const { listContainer, addNote } = createListControl();
+        const { listContainer, setNotes } = createListControl();
   
         // Example: appending the list container to a specific part of the node
         tick.appendChild(listContainer); // Append the list container wherever you want in the DOM      
@@ -71,13 +71,18 @@ startObserving(
               thumbsDown.setSelected(false);
               break;
           }
+
+          setNotes(model.notes);
         };
       },
     }
   ]
 )
 
-function createListControl(): { listContainer: HTMLElement, addNote: (note: string) => void } {
+function createListControl(): {
+  listContainer: HTMLElement,
+  setNotes: (notes: string[]) => void
+} {
   const listContainer = document.createElement('div');
   listContainer.classList.add('note-list');
 
@@ -91,7 +96,12 @@ function createListControl(): { listContainer: HTMLElement, addNote: (note: stri
 
   return {
     listContainer,
-    addNote
+    setNotes(notes) {
+      // Clear the existing notes
+      listContainer.innerHTML = '';
+      // Add new notes to the list
+      notes.forEach(addNote);
+    },
   };
 }
 
