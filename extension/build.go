@@ -70,6 +70,7 @@ func getOptions(
 			"./src/background.ts",
 			"./src/content.ts",
 			"./src/content.css",
+			"./src/web_accessible_resources/images/logo.png",
 		},
 		Outdir:    "dist",
 		Bundle:    true,
@@ -80,7 +81,8 @@ func getOptions(
 		LogLevel:  api.LogLevelDebug,
 		Plugins: []api.Plugin{
 			environmentPlugin(ctx, env),
-			jsonPlugin(ctx),
+			copyPlugin(ctx, `manifest.json$`),
+			copyPlugin(ctx, `logo.png$`),
 			timestampPlugin(),
 		},
 	}
@@ -119,12 +121,15 @@ func environmentPlugin(
 	}
 }
 
-func jsonPlugin(ctx context.Context) api.Plugin {
+func copyPlugin(
+	ctx context.Context,
+	filter string,
+) api.Plugin {
 	logger := zerolog.Ctx(ctx)
 	return api.Plugin{
 		Name: "json-plugin",
 		Setup: func(build api.PluginBuild) {
-			build.OnLoad(api.OnLoadOptions{Filter: `manifest.json$`}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
+			build.OnLoad(api.OnLoadOptions{Filter: filter}, func(args api.OnLoadArgs) (api.OnLoadResult, error) {
 				// Read the file content
 				contentBytes, err := os.ReadFile(args.Path)
 				if err != nil {

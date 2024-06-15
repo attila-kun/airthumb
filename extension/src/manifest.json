@@ -90,5 +90,11 @@
             "css": ["content.css"],
             "js": ["content.js"]
         }
-    ]
+    ],
+    "icons": {
+        "16": "web_accessible_resources/images/logo.png",
+        "32": "web_accessible_resources/images/logo.png",
+        "48": "web_accessible_resources/images/logo.png",
+        "128": "web_accessible_resources/images/logo.png"
+    }
 }
