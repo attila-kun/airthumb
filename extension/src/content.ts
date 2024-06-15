@@ -23,11 +23,23 @@ startObserving(
         const readModel = () => {
           chrome.storage.sync.get(listingId, (data) => {
             if (data[listingId]) {
-              model = data[listingId];
+              const storedModel = data[listingId];
+        
+              // Validate and set thumbsState with default null if validation fails
+              model.thumbsState = (['up', 'down'].includes(storedModel.thumbsState)) ? storedModel.thumbsState : null;
+        
+              // Validate notes to ensure all elements are strings, filter out non-string items
+              model.notes = Array.isArray(storedModel.notes) ? storedModel.notes.filter(note => typeof note === 'string') : [];
+        
+              render();
+            } else {
+              // Apply defaults if no data is found
+              model.thumbsState = null;
+              model.notes = [];
               render();
             }
           });
-        };
+        };        
 
         let render;
 
