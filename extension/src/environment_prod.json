@@ -1,3 +1,4 @@
 {
-    "env": "prod"
+    "env": "prod",
+    "mixpanelToken": "8d9fb6825589f3c2cac117686f701eee"
 }
