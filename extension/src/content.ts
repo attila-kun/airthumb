@@ -43,28 +43,28 @@ startObserving(
           });
         };        
 
-        let render;
+        let render, renderAndSave;
 
         const { listContainer, setNotes } = createListControl((noteIndex) => {
           model.notes.splice(noteIndex, 1);
-          render();
+          renderAndSave();
         });
 
         const thumbsUpHandler = () => {
           model.thumbsState = model.thumbsState === 'up' ? null : 'up';
-          render();
+          renderAndSave();
           track("thumbsUp");
         };
 
         const thumbsDownHandler = () => {
           model.thumbsState = model.thumbsState === 'down' ? null : 'down';
-          render();
+          renderAndSave();
           track("thumbsDown");
         };
 
         const addNoteHandler = (note) => {
           model.notes.push(note);
-          render();
+          renderAndSave();
           track("addNote", { note });
         };
         
@@ -108,6 +108,10 @@ startObserving(
           }
 
           setNotes(model.notes);
+        };
+
+        renderAndSave = () => {
+          render();
           saveModel();
         };
 

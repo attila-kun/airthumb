@@ -87,14 +87,26 @@ func getOptions(
 			LogLevel:  api.LogLevelInfo,
 			Plugins: []api.Plugin{
 				stubPlugin(ctx, "mixpanel-browser"),
+			},
+		},
+		{
+			EntryPoints: []string{
+				"./src/background.ts",
+			},
+			Outdir:    "dist",
+			Bundle:    true,
+			Sourcemap: api.SourceMapNone,
+			Format:    api.FormatESModule,
+			Target:    api.ES2017,
+			Write:     true,
+			LogLevel:  api.LogLevelInfo,
+			Plugins: []api.Plugin{
 				environmentPlugin(ctx, env),
-				timestampPlugin(),
 			},
 		},
 		{
 			EntryPoints: []string{
 				"./src/manifest.json",
-				"./src/background.ts",
 				"./src/content.css",
 				"./src/web_accessible_resources/images/logo.png",
 			},
@@ -106,7 +118,6 @@ func getOptions(
 			Write:     true,
 			LogLevel:  api.LogLevelInfo,
 			Plugins: []api.Plugin{
-				environmentPlugin(ctx, env),
 				copyPlugin(ctx, `manifest.json$`),
 				copyPlugin(ctx, `logo.png$`),
 				timestampPlugin(),
@@ -282,5 +293,5 @@ func watch(ctx context.Context) {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
 	sig := <-done
-	logger.Info().Msgf("Shutting down gracefully, received signal: %v", sig)
+	logger.Info().Msgf("Shutting down, received signal: %v", sig)
 }
