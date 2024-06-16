@@ -4,7 +4,6 @@
     "description": "Rate Airbnb listings with thumbs up or down. Save notes for each listing.",
     "version": "1.0",
     "permissions": [
-        "activeTab",
         "storage"
     ],
     "background": {
