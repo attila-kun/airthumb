@@ -96,7 +96,7 @@ func getOptions(
 			Outdir:    "dist",
 			Bundle:    true,
 			Sourcemap: api.SourceMapNone,
-			Format:    api.FormatESModule,
+			Format:    api.Format(api.PlatformBrowser),
 			Target:    api.ES2017,
 			Write:     true,
 			LogLevel:  api.LogLevelInfo,
