@@ -3,7 +3,7 @@ import { isRunningAsBackgroundScript } from "./utils";
 
 export async function track(eventName: string, props?) {
   if (isRunningAsBackgroundScript()) {
-    mixpanel.track(eventName);
+    mixpanel.track(eventName, props);
     return;
   }
 

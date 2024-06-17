@@ -16,6 +16,10 @@ startObserving(
 
         const listingId = String(getListingId());
 
+        const trackListing = (eventName: string, props?: any) => {
+          track(eventName, { ...props, listingId, url: window.location.href });
+        };
+
         const saveModel = () => {
           chrome.storage.sync.set({ [listingId]: model }, () => {
             console.log('Model saved', model);
@@ -53,19 +57,19 @@ startObserving(
         const thumbsUpHandler = () => {
           model.thumbsState = model.thumbsState === 'up' ? null : 'up';
           renderAndSave();
-          track("thumbsUp");
+          trackListing("thumbsUp");
         };
 
         const thumbsDownHandler = () => {
           model.thumbsState = model.thumbsState === 'down' ? null : 'down';
           renderAndSave();
-          track("thumbsDown");
+          trackListing("thumbsDown");
         };
 
         const addNoteHandler = (note) => {
           model.notes.push(note);
           renderAndSave();
-          track("addNote", { note });
+          trackListing("addNote", { note });
         };
         
         const thumbs = document.createElement('div');
